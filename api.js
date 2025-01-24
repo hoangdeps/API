@@ -23,7 +23,7 @@ const validateInput = (key, host, time, method, port) => {
   if (key !== "negan") return "Invalid Key";
   if (time > 300) return "Thời gian phải nhỏ hơn 300 giây";
   if (port < 1 || port > 65535) return "Cổng không hợp lệ";
-  if (!["flood", "killer", "bypass", "tlskill", "priv-flood"].includes(method.toLowerCase())) {
+  if (!["flood", "killer", "bypass", "tlskill", "attack"].includes(method.toLowerCase())) {
     return "Phương thức không hợp lệ";
   }
   return null;

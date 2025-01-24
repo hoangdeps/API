@@ -1,0 +1,6 @@
+https://www.free-proxy-list.net/
+https://www.socks-proxy.net/
+https://www.sslproxies.org/
+https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=10000&country=all&ssl=all&anonymity=all
+https://api.proxyscrape.com/v2/?request=displayproxies&protocol=https&timeout=10000&country=all&ssl=all&anonymity=all
+https://daudau.org/api/http.txt

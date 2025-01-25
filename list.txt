@@ -1,3 +1,4 @@
+https://daudau.org/api/http.txt
 https://free-proxy-list.net/
 https://www.us-proxy.org/
 https://free-proxy-list.net/uk-proxy.html
@@ -5,4 +6,4 @@ https://www.sslproxies.org/
 https://free-proxy-list.net/anonymous-proxy.html
 https://api.proxyscrape.com/v2/?request=displayproxies&protocol=http&timeout=5000&country=all&ssl=all&anonymity=all
 https://api.proxyscrape.com/v2/?request=displayproxies&protocol=https&timeout=5000&country=all&ssl=all&anonymity=all
-https://daudau.org/api/http.txt
+https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/http.txt

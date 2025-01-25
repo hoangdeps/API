@@ -3,7 +3,7 @@ const { exec } = require("child_process");
 const axios = require("axios");
 
 const app = express();
-const port = 9999;
+const port = 80;
 
 const maxConcurrentAttacks = 1;
 let activeAttacks = 0;

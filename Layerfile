@@ -1,38 +1,22 @@
-# This is an example webapp.io configuration for Docker!
+#This is an example webapp.io configuration for Docker!
 FROM vm/ubuntu:18.04
 
 # To note: Layerfiles create entire VMs, *not* containers!
 
-# Install the latest version of Docker and required packages
+# install the latest version of Docker, as in the official Docker installation tutorial.
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    ca-certificates curl gnupg lsb-release git python3-pip zip screen tmux htop nodejs npm && \
-    mkdir -p /etc/apt/keyrings && \
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
+    apt-get install ca-certificates curl gnupg lsb-release && \
+    sudo mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
     echo \
     "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" |\
-      tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+      sudo tee /etc/apt/sources.list.d/docker.list > /dev/null && \
     apt-get update && \
-    apt-get install -y docker-ce docker-ce-cli containerd.io && \
-    pip3 install requests python-telegram-bot pytz termcolor psutil && \
-    npm install -g colors set-cookie-parser request axios hpack https commander socks chalk chalk@2 && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install docker-ce docker-ce-cli containerd.io
 
-# Copy files from the repository into this staging server
+# copy files from the repository into this staging server
 COPY . .
 
-# Install Node.js dependencies for the application
-RUN npm install
-
-# Build the Docker image for the application
 RUN docker build -t image .
-
-# Run the application in a Docker container
 RUN docker run -d -p 80:80 image
-
-# Expose website port
 EXPOSE WEBSITE http://localhost:80
-
-# Default command to run api.js
-CMD ["node", "api.js"]

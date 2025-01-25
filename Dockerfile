@@ -1,3 +1,6 @@
+#This is an example webapp.io configuration for Docker!
+FROM vm/ubuntu:18.04
+
 # Tạo thư mục làm việc
 WORKDIR /api
 

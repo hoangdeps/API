@@ -1,4 +1,4 @@
-# Sử dụng Ubuntu minimal base image
+## Sử dụng Ubuntu minimal base image
 FROM ubuntu:20.04
 
 # Đặt biến môi trường để tránh yêu cầu tương tác khi cài đặt

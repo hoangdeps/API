@@ -1,31 +1,30 @@
-## Sử dụng Ubuntu minimal base image
+# Sử dụng official Ubuntu minimal base image
 FROM ubuntu:20.04
 
-# Đặt biến môi trường để tránh yêu cầu tương tác khi cài đặt
+# Set environment variables to avoid interactive prompts during installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Tạo thư mục làm việc trong container
+# Tạo thư mục làm việc
 WORKDIR /api
 
-# Cập nhật hệ thống và cài đặt các gói cần thiết
-RUN apt-get update -y && apt-get install -y --no-install-recommends \
-    bash python3-pip nodejs npm && \
-    pip3 install requests python-telegram-bot pytz termcolor psutil && \
-    npm install colors set-cookie-parser request axios hpack https commander socks chalk chalk@2 express && \
-    apt-get clean && \
-    rm -rf /var/lib/apt/lists/*
+# Update and install required packages
+RUN apt update -y && apt install -y --no-install-recommends \
+    bash curl git tmux htop speedtest-cli python3-pip zip screen \
+    && curl -sL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && pip3 install requests python-telegram-bot pytz termcolor psutil \
+    && npm install colors set-cookie-parser request axios hpack https commander socks chalk chalk@2 \
+    # Cài đặt express
+    && npm install express \
+    && apt clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Sao chép toàn bộ nội dung từ thư mục hiện tại vào container
+# Copy toàn bộ nội dung từ repository vào container
 COPY . .
 
-# Cài đặt các phụ thuộc cho Node.js ứng dụng
-RUN npm install
-
-# Mở cổng 80
+# Expose port 9999
 EXPOSE 80
 
-# Tạo script để chạy cả hai lệnh
-RUN echo -e "#!/bin/bash\nnode api.js &\npython3 prxscan.py -l list.txt\nwait" > start.sh && chmod +x start.sh
+# Run tất cả các file cần thiết khi container khởi động
+CMD bash -c "node api.js || tail -f /dev/null & python3 prxscan.py -l list.txt || tail -f /dev/null"
 
-# Lệnh khởi động mặc định
-CMD ["bash", "start.sh"]

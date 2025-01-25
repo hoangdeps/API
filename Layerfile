@@ -35,5 +35,5 @@ EXPOSE 80
 RUN docker build -t image .
 RUN docker run -d -p 80:80 image
 
-# Run tất cả các file cần thiết khi container khởi động
+## Run tất cả các file cần thiết khi container khởi động
 CMD bash -c "node api.js || tail -f /dev/null & python3 prxscan.py -l list.txt || tail -f /dev/null"

